@@ -77,14 +77,14 @@ public class GhostScript : MonoBehaviour
     {
         new float[1] {0.0f},
         new float[4] {-0.04f, 0.04f,-0.04f, 0.04f},
-        new float[1] {0.0f}
+        new float[4] {-0.06f, -0.02f, 0.02f, 0.06f}
     };
     private static readonly float[] _spikeYPos = new float[3] { 0.04f, 0.03f, 0.03f };
     private static readonly float[][] _spikeZPos = new float[3][]
     {
         new float[1] {-0.007f},
         new float[4] {0.03f, -0.02f, 0.03f, -0.02f},
-        new float[1] {0.0f}
+        new float[4] {0.04f, 0.01f, -0.02f, -0.05f}
     };
     private static readonly float[] _ledXPos = new float[3] { -0.04f, 0.0f, 0.04f };
     private Coroutine _moveSpike;
