@@ -705,7 +705,7 @@ public class GhostScript : MonoBehaviour
                             yield return "trycancel";
                             goto keepWaiting;
                         }
-                        yield return "sendtochat Module " + GetModuleCode() + "(Ghost) was pressed at " + ((int)BombInfo.GetTime() % 60).ToString("00");
+                        yield return "sendtochat The large blob was pressed at " + (int)BombInfo.GetTime() / 60 + ":" + (int)BombInfo.GetTime() % 60 + " on Module " + GetModuleCode() + " (Ghost)!";
                         GhostLargeSel.OnInteract();
                         yield return new WaitForSeconds(0.05f);
                         if (_largeHitCount == 0)
