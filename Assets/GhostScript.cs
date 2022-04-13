@@ -243,6 +243,17 @@ public class GhostScript : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        _ghostIdCounter = 1;
+        if (_ghostId == 1 && GhostMusic.isPlaying)
+        {
+            GhostMusic.Stop();
+            try { GameMusicControl.GameMusicVolume = defaultGameMusicVolume; }
+            catch (Exception) { }
+        }
+    }
+
     private bool GhostLargeSelPress()
     {
         Audio.PlaySoundAtTransform("Hit", transform);
