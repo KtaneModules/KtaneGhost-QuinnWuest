@@ -16618,7 +16618,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ModuleType: GhostModule
   ModuleDisplayName: Ghost
-  RequiresTimerVisibility: 0
+  RequiresTimerVisibility: 1
 --- !u!114 &114633318422246088
 MonoBehaviour:
   m_ObjectHideFlags: 1
