@@ -48,6 +48,7 @@ public class GhostScript : MonoBehaviour
     private bool _canPressLarge = true;
     private bool[] _largePressRules = new bool[4];
     private bool _canAttack;
+    private bool _canPressInAutosolver = true;
 
     // Medium Ghost
     public GameObject GhostMediumBigParent;
@@ -105,6 +106,7 @@ public class GhostScript : MonoBehaviour
     private int[] _phaseThreePressOrder = new int[16];
     private int _phaseThreePressIx;
     private int _spikeTarget;
+    private bool _spikeActive;
     private int[] _lazyArr = new int[] { 0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15 };
 
     private void Start()
@@ -482,6 +484,7 @@ public class GhostScript : MonoBehaviour
 
     private IEnumerator ShrinkLarge()
     {
+        _canPressInAutosolver = false;
         Audio.PlaySoundAtTransform("Split", transform);
         var duration = 0.3f;
         var elapsed = 0f;
@@ -497,6 +500,7 @@ public class GhostScript : MonoBehaviour
 
     private IEnumerator ShrinkMedium(int objNum)
     {
+        _canPressInAutosolver = false;
         var duration = 0.3f;
         var elapsed = 0f;
         while (elapsed < duration)
@@ -537,6 +541,7 @@ public class GhostScript : MonoBehaviour
             elapsed += Time.deltaTime;
         }
         GhostMediumBigParent.transform.localScale = new Vector3(1f, 1f, 1f);
+        _canPressInAutosolver = true;
     }
 
     private IEnumerator GrowSmall(int index)
@@ -550,6 +555,7 @@ public class GhostScript : MonoBehaviour
             elapsed += Time.deltaTime;
         }
         GhostSmallParent[index].transform.localScale = new Vector3(1f, 1f, 1f);
+        _canPressInAutosolver = true;
     }
 
     private IEnumerator SpinSpike()
@@ -592,6 +598,7 @@ public class GhostScript : MonoBehaviour
 
     private IEnumerator MoveSpike()
     {
+        _spikeActive = true;
         SpikeObj.SetActive(true);
         CrosshairObj.SetActive(true);
         _spikeTarget = Rnd.Range(0, 3);
@@ -615,6 +622,7 @@ public class GhostScript : MonoBehaviour
             elapsed += Time.deltaTime;
         }
         SpikeObj.SetActive(false);
+        _spikeActive = false;
         CrosshairObj.SetActive(false);
         AttackLED();
     }
@@ -796,9 +804,14 @@ public class GhostScript : MonoBehaviour
         }
     }
 
-    private IEnumerator TwitchHandleForcedSolve()
+    private void TwitchHandleForcedSolve()
     {
-        AutoSpikeAvoid();
+        StartCoroutine(Autosolve());
+        StartCoroutine(AutoSpikeAvoid());
+    }
+
+    private IEnumerator Autosolve()
+    {
         if (_currentPhase == 0)
         {
             if ((int)BombInfo.GetTime() < 60)
@@ -806,75 +819,56 @@ public class GhostScript : MonoBehaviour
                 while (_largeHitCount < 4)
                 {
                     GhostLargeSel.OnInteract();
-                    AutoSpikeAvoid();
                     yield return new WaitForSeconds(0.1f);
                 }
-                yield return new WaitForSeconds(0.5f);
-                goto nextPhase;
             }
-            if (!_largePressRules[0])
+            else
             {
-                while (!(_tensDigit % 2 == 0 && _onesDigit % 2 == 0))
+                while (_largePressRules.Contains(false))
                 {
+                    if (
+                        (!_largePressRules[0] && _tensDigit % 2 == 0 && _onesDigit % 2 == 0 && _tensDigit != _onesDigit) ||
+                        (!_largePressRules[1] && _tensDigit % 2 == 1 && _onesDigit % 2 == 1 && _tensDigit != _onesDigit) ||
+                        (!_largePressRules[2] && _tensDigit == _onesDigit) ||
+                        !_largePressRules[3]
+                        )
+                    {
+                        GhostLargeSel.OnInteract();
+                        yield return new WaitForSeconds(0.1f);
+                    }
                     yield return null;
-                    AutoSpikeAvoid();
                 }
-                GhostLargeSel.OnInteract();
-                yield return new WaitForSeconds(0.1f);
             }
-            if (!_largePressRules[1])
-            {
-                while (!(_tensDigit % 2 == 1 && _onesDigit % 2 == 1))
-                {
-                    yield return null;
-                    AutoSpikeAvoid();
-                }
-                GhostLargeSel.OnInteract();
-                yield return new WaitForSeconds(0.1f);
-            }
-            if (!_largePressRules[2])
-            {
-                while (_tensDigit != _onesDigit)
-                {
-                    yield return null;
-                    AutoSpikeAvoid();
-                }
-                GhostLargeSel.OnInteract();
-                yield return new WaitForSeconds(0.1f);
-            }
-            if (!_largePressRules[3])
-            {
-                AutoSpikeAvoid();
-                GhostLargeSel.OnInteract();
-                yield return new WaitForSeconds(0.1f);
-            }
-            yield return new WaitForSeconds(0.5f);
         }
-        nextPhase:
+        while (!_canPressInAutosolver)
+            yield return null;
         if (_currentPhase == 1)
         {
             for (int i = _phaseTwoPressIx; i < _phaseTwoPressOrder.Length; i++)
             {
                 GhostMediumSel[_phaseTwoPressOrder[_phaseTwoPressIx]].OnInteract();
-                AutoSpikeAvoid();
                 yield return new WaitForSeconds(0.1f);
             }
-            yield return new WaitForSeconds(0.5f);
         }
+        while (!_canPressInAutosolver)
+            yield return null;
         if (_currentPhase == 2)
         {
             for (int i = _phaseThreePressIx; i < _phaseThreePressOrder.Length; i++)
             {
                 GhostSmallSel[_lazyArr[_phaseThreePressOrder[_phaseThreePressIx]]].OnInteract();
-                AutoSpikeAvoid();
                 yield return new WaitForSeconds(0.1f);
             }
         }
     }
 
-    private void AutoSpikeAvoid()
+    private IEnumerator AutoSpikeAvoid()
     {
-        if (_ledPosition == _spikeTarget)
-            LedSels[(_ledPosition + 1) % 3].OnInteract();
+        while (!_moduleSolved)
+        {
+            yield return null;
+            if (_ledPosition == _spikeTarget && _spikeActive)
+                LedSels[(_ledPosition + 1) % 3].OnInteract();
+        }
     }
 }
