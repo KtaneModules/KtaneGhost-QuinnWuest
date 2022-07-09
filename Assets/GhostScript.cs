@@ -724,7 +724,7 @@ public class GhostScript : MonoBehaviour
                             yield return "trycancel";
                             goto keepWaiting;
                         }
-                        yield return "sendtochat The large blob was pressed at " + (int)BombInfo.GetTime() / 60 + ":" + (int)BombInfo.GetTime() % 60 + " on Module " + GetModuleCode() + " (Ghost)!";
+                        yield return "sendtochat The large blob was pressed at " + ((int)BombInfo.GetTime() / 60).ToString("00") + ":" + ((int)BombInfo.GetTime() % 60).ToString("00") + " on Module " + GetModuleCode() + " (Ghost)!";
                         GhostLargeSel.OnInteract();
                         yield return new WaitForSeconds(0.05f);
                         if (_largeHitCount == 0)
@@ -786,6 +786,11 @@ public class GhostScript : MonoBehaviour
                 if (pressList.Count > 16)
                 {
                     yield return "sendtochaterror More than 16 presses were given!";
+                    yield break;
+                }
+                if (pressList.Distinct().Count() != pressList.Count())
+                {
+                    yield return "sendtochaterror You have a duplicate press! Command ignored.";
                     yield break;
                 }
                 yield return "multiple strikes";
